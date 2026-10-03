@@ -68,6 +68,11 @@ DEFAULT_COUNTRY = "IN"
 # --- Groq: free, no credit card, OpenAI-compatible chat completions API ---
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+print("=== ENVIRONMENT CHECK ===")
+print("GROQ_API_KEY present:", bool(GROQ_API_KEY))
+print("GROQ_API_KEY length:", len(GROQ_API_KEY))
+print("GROQ_MODEL:", GROQ_MODEL)
+print("=========================")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 API_TIMEOUT_SECONDS = 20
 
