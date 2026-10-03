@@ -1,0 +1,295 @@
+/* ==========================================================================
+   Design notes
+   - Calm blue-green palette on a misty background; no bright alarm colours,
+     except the coral used only for crisis messages.
+   - The bot "speaks" in a serif (like a letter); the user writes in a sans-serif bubble.
+   - One memorable detail: the typing indicator is a dot that slowly breathes.
+   ========================================================================== */
+
+:root {
+  --bg: #eaf0f1;
+  --surface: #f7faf9;
+  --ink: #1b2a31;
+  --muted: #55676e;
+  --line: #cbd8da;
+  --accent: #2c6b6f;
+  --user-bg: #2c6b6f;
+  --user-ink: #ffffff;
+  --crisis: #b0392e;
+  --crisis-bg: #f9ebe8;
+
+  --font-ui: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-voice: "Newsreader", Georgia, "Times New Roman", serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1619;
+    --surface: #142024;
+    --ink: #e3ecee;
+    --muted: #93a5ab;
+    --line: #263940;
+    --accent: #5fb0b0;
+    --user-bg: #1f5559;
+    --user-ink: #eaf6f6;
+    --crisis: #f08a7e;
+    --crisis-bg: #2b1b19;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Layout: header / scrolling chat / composer ---------- */
+.app {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100dvh;
+  max-width: 760px;
+  margin: 0 auto;
+  background: var(--surface);
+  border-inline: 1px solid var(--line);
+}
+
+/* ---------- Header ---------- */
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  padding: max(1rem, env(safe-area-inset-top)) 1.25rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand { display: flex; align-items: center; gap: 0.75rem; }
+
+.brand h1 {
+  margin: 0;
+  font-family: var(--font-voice);
+  font-size: 1.3rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.tagline { margin: 0.15rem 0 0; font-size: 0.85rem; color: var(--muted); }
+
+.dot {
+  flex: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.controls { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+
+.region { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--muted); }
+
+.region select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.3rem 0.5rem;
+}
+
+.text-btn {
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0.3rem 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Conversation ---------- */
+.chat {
+  overflow-y: auto;
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  scroll-behavior: smooth;
+}
+
+.msg {
+  display: flex;
+  gap: 0.7rem;
+  max-width: 100%;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 320ms cubic-bezier(0.22, 1, 0.36, 1),
+              transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Entrance state: applied for one frame, then removed to trigger the transition above */
+.msg.enter { opacity: 0; transform: translateY(10px) scale(0.98); }
+.msg.user.enter { transform: translateY(10px) scale(0.98) translateX(4px); }
+
+/* Exit state: used only on the typing indicator before it's removed */
+.msg.leave { opacity: 0; transform: translateY(-4px) scale(0.98); transition-duration: 160ms; }
+
+.msg p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Bot: plain serif text with a small marker, like a letter */
+.msg.bot { align-items: flex-start; max-width: 62ch; }
+
+.msg.bot .mark {
+  flex: none;
+  width: 10px; height: 10px;
+  margin-top: 0.62rem;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.msg.bot p {
+  font-family: var(--font-voice);
+  font-size: 1.15rem;
+  line-height: 1.6;
+}
+
+/* User: sans-serif bubble on the right */
+.msg.user { align-self: flex-end; max-width: min(80%, 46ch); }
+
+.msg.user p {
+  background: var(--user-bg);
+  color: var(--user-ink);
+  padding: 0.6rem 0.9rem;
+  border-radius: 16px 16px 4px 16px;
+}
+
+/* Crisis reply: the only place we use the warm alert colour */
+.msg.bot.crisis {
+  padding: 0.9rem 1rem;
+  background: var(--crisis-bg);
+  border-left: 4px solid var(--crisis);
+  border-radius: 4px 12px 12px 4px;
+}
+
+.msg.bot.crisis .mark { background: var(--crisis); }
+
+.msg.bot.error p { color: var(--muted); font-style: italic; }
+
+/* Typing indicator: the marker dot breathes gently, and three small dots bounce in sequence */
+.msg.typing .mark { animation: breathe 1.8s ease-in-out infinite alternate; }
+
+@keyframes breathe {
+  from { transform: scale(0.8); opacity: 0.55; }
+  to   { transform: scale(1.7); opacity: 1; }
+}
+
+.typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 0.75rem;
+}
+
+.typing-dots i {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  animation: dot-bounce 1.1s ease-in-out infinite;
+}
+
+.typing-dots i:nth-child(2) { animation-delay: 0.15s; }
+.typing-dots i:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes dot-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+
+/* ---------- Composer ---------- */
+.composer {
+  padding: 0.75rem 1.25rem max(0.75rem, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+}
+
+#chat-form { display: flex; align-items: flex-end; gap: 0.6rem; }
+
+#message-input {
+  flex: 1;
+  font: inherit;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0.65rem 0.9rem;
+  resize: none;
+  max-height: 9rem;
+  transition: height 120ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+#message-input:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+#message-input::placeholder { color: var(--muted); }
+
+#send-btn {
+  font: inherit;
+  font-weight: 600;
+  color: var(--user-ink);
+  background: var(--user-bg);
+  border: none;
+  border-radius: 14px;
+  padding: 0.65rem 1.2rem;
+  cursor: pointer;
+  transition: transform 140ms ease, opacity 160ms ease, box-shadow 160ms ease;
+}
+
+#send-btn:hover:not(:disabled) { box-shadow: 0 2px 10px color-mix(in srgb, var(--user-bg) 45%, transparent); }
+#send-btn:active:not(:disabled) { transform: scale(0.95); }
+#send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+#send-btn.is-sending { transform: scale(0.97); }
+
+.text-btn, .region select { transition: opacity 160ms ease, border-color 160ms ease; }
+.text-btn:hover { opacity: 0.75; }
+
+.note { margin: 0.5rem 0 0; font-size: 0.8rem; color: var(--muted); }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- Small screens ---------- */
+@media (max-width: 560px) {
+  .app { border-inline: none; }
+  .topbar { padding-inline: 1rem; }
+  .chat, .composer { padding-inline: 1rem; }
+  .msg.bot p { font-size: 1.08rem; }
+  .region span { display: none; }   /* the select is still labelled for screen readers below */
+  .msg.user { max-width: 88%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat { scroll-behavior: auto; }
+  .msg.typing .mark { animation: none; }
+  .typing-dots i { animation: none; opacity: 0.8; }
+  .msg, .msg.enter, .msg.leave, #send-btn, #message-input {
+    transition: none !important;
+    transform: none !important;
+  }
+}

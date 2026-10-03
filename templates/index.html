@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mental Health Support Chatbot</title>
+
+  <!-- Fonts load from Google Fonts when online; the page falls back to system fonts offline. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="app">
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="dot" aria-hidden="true"></span>
+        <div>
+          <h1>Mental Health Support Chatbot</h1>
+          <p class="tagline">General emotional support. Not a substitute for professional care.</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <label class="region">
+          <span>Region for crisis resources</span>
+          <select id="country" aria-label="Region for crisis resources">
+            <option value="IN">India</option>
+            <option value="US">United States</option>
+            <option value="GB">United Kingdom</option>
+            <option value="CA">Canada</option>
+            <option value="AU">Australia</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </label>
+        <button id="clear-btn" class="text-btn" type="button">Clear conversation</button>
+      </div>
+    </header>
+
+    <main id="chat" class="chat" aria-live="polite" aria-label="Conversation"></main>
+
+    <footer class="composer">
+      <form id="chat-form" autocomplete="off">
+        <label class="sr-only" for="message-input">Your message</label>
+        <textarea id="message-input" rows="1" maxlength="1000"
+                  placeholder="Type how you're feeling..."></textarea>
+        <button id="send-btn" type="submit">Send</button>
+      </form>
+      <p class="note">If you are in immediate danger, contact your local emergency number.</p>
+    </footer>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
